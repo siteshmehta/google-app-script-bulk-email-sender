@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <base target="_top">
+  <script src="https://code.jquery.com/jquery-1.8.3.min.js"></script>
+  <script src="https://code.jquery.com/ui/1.10.0/jquery-ui.min.js"></script>
+</head>
+
+<body>
+  <form id="myForm">
+    <label for="sheetUrl">Google Sheet URL:</label>
+    <input type="text" id="sheetUrl" name="sheetUrl"  >
+    <br>
+    <label for="templateUrl">Google Word URL (Google Docs URL):</label>
+    <input type="text" id="templateUrl" name="templateUrl"  >
+    <br>
+    <button type="submit">Submit</button>
+  </form>
+
+
+
+
+  <p>Server response:- <br></p>
+  <p id='server_response'></p>
+
+  <script>
+    // When the page loads.
+      $(function() {
+        $('#myForm').bind('submit', onNewTaskFormSubmit); 
+      }); 
+
+
+      function onNewTaskFormSubmit(event) {
+        event.preventDefault(); 
+        var sheetUrl = $('#sheetUrl').val();
+        var templateUrl = $('#templateUrl').val();
+
+
+        
+        $("#server_response").html('');
+        alert("Please wait email is sending....");
+        $("#myForm button[type='submit']").attr({disabled:true});
+
+        google.script.run.withSuccessHandler(function(response){
+           $("#myForm button[type='submit']").attr({disabled:false});
+            if(response.status === false){
+                alert(response.message || "Unable to get the response");
+                return false;
+            }else if(response.status === true){
+              let {errors,message} = response;
+
+              let tempErr = errors.map((err)=>{
+                return `<li>${err}</li>`
+              });
+
+
+              let tempBody = `
+                <p>Success response:-  ${message}</p>
+
+                <ul>
+                  List of failed response :-
+                </ul>
+                ${tempErr}
+              `;
+
+              $("#server_response").html(tempBody);
+            } 
+
+            console.log(response)
+        })
+        .withFailureHandler(function(err){
+          alert("Unable to send the email");
+          console.log(err)
+          $("#myForm button[type='submit']").attr({disabled:true});
+        })
+        .doPost(sheetUrl,templateUrl); 
+      }
+
+ 
+  </script>
+</body>
+
+</html>
